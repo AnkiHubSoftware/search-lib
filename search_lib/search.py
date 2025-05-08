@@ -48,26 +48,31 @@ def dense_search(query:str, notes:list[dict], embeddings=None, top_k=5, verbose:
 def tokenize_notes(notes, verbose:bool=False):
     "Tokenize all notes for BM25 search."
     if verbose: print(f"{datetime.now()} : Tokenizing {len(notes)} notes...")
-    tokenized_notes = []
-    # Use tqdm with position=0 and leave=True to ensure proper updating in Jupyter
-    for note in tqdm(notes, disable=not verbose, position=0, leave=True):
-        tokenized_notes.append(bm25s.tokenize(note["content"], show_progress=False))
-
-    return tokenized_notes
+    return bm25s.tokenize([note["content"] for note in notes])
 
 def sparse_search(query, notes, notes_tokens=None, top_k=5, verbose:bool=False):
     "Search for notes using BM25 sparse retrieval."
-    if notes_tokens is None: notes_tokens = tokenize_notes(notes, verbose=verbose)
-    if verbose: print(f"{datetime.now()} : Indexing {len(notes_tokens)} notes...")
-    # Initialize BM25 with corpus
-    retriever = bm25s.BM25(corpus=notes_tokens)
+    if verbose: print(f"{datetime.now()} : Indexing notes...")
+    notes_content = [n['content'] for n in notes]
+    # Create a mapping from content to note index for efficient lookup
+    content_to_idx = {content: idx for idx, content in enumerate(notes_content)}
+
+    retriever = bm25s.BM25(corpus=notes_content)
+    if notes_tokens is None:
+        notes_tokens = bm25s.tokenize(notes_content)
     retriever.index(notes_tokens)
+
     if verbose: print(f"{datetime.now()} : Searching...")
-    # Get query tokens and retrieve results
     query_tokens = bm25s.tokenize(query)
     docs, scores = retriever.retrieve(query_tokens, k=len(notes))
 
-    bm25_scores = {i: scores[0, idx] for idx, i in enumerate(docs[0])}
+    bm25_scores = {}
+    for idx, doc_id in enumerate(docs[0]):
+        doc_id = str(doc_id) if isinstance(doc_id, np.str_) else doc_id
+        if doc_id in content_to_idx:
+            note_idx = content_to_idx[doc_id]
+            bm25_scores[note_idx] = float(scores[0, idx])
+
     max_score = max(bm25_scores.values()) if bm25_scores else 1
     normalized_scores = {i: score/max_score for i, score in bm25_scores.items()}
 

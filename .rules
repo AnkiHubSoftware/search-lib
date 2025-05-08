@@ -1,0 +1,77 @@
+# BM25s reference examples:
+
+```python
+import bm25s
+import Stemmer  # optional: for stemming
+
+# Create your corpus here
+corpus = [
+    "a cat is a feline and likes to purr",
+    "a dog is the human's best friend and loves to play",
+    "a bird is a beautiful animal that can fly",
+    "a fish is a creature that lives in water and swims",
+]
+
+# optional: create a stemmer
+stemmer = Stemmer.Stemmer("english")
+
+# Tokenize the corpus and only keep the ids (faster and saves memory)
+corpus_tokens = bm25s.tokenize(corpus, stopwords="en", stemmer=stemmer)
+
+# Create the BM25 model and index the corpus
+retriever = bm25s.BM25()
+retriever.index(corpus_tokens)
+
+# Query the corpus
+query = "does the fish purr like a cat?"
+query_tokens = bm25s.tokenize(query, stemmer=stemmer)
+
+# Get top-k results as a tuple of (doc ids, scores). Both are arrays of shape (n_queries, k).
+# To return docs instead of IDs, set the `corpus=corpus` parameter.
+results, scores = retriever.retrieve(query_tokens, k=2)
+
+for i in range(results.shape[1]):
+    doc, score = results[0, i], scores[0, i]
+    print(f"Rank {i+1} (score: {score:.2f}): {doc}")
+
+# You can save the arrays to a directory...
+retriever.save("animal_index_bm25")
+
+# You can save the corpus along with the model
+retriever.save("animal_index_bm25", corpus=corpus)
+
+# ...and load them when you need them
+import bm25s
+reloaded_retriever = bm25s.BM25.load("animal_index_bm25", load_corpus=True)
+# set load_corpus=False if you don't need the corpus
+```
+
+And you can get more flexibility as well
+
+```python
+# You can provide a list of queries instead of a single query
+queries = ["What is a cat?", "is the bird a dog?"]
+
+# Provide your own stopwords list if you don't like the default one
+stopwords = ["a", "the"]
+
+# For stemming, use any function that is callable on each word list
+stemmer_fn = lambda lst: [word for word in lst]
+
+# Tokenize the queries
+query_token_ids = bm25s.tokenize(queries, stopwords=stopwords, stemmer=stemmer_fn)
+
+# If you want the tokenizer to return strings instead of token ids, you can do this
+query_token_strs = bm25s.tokenize(queries, return_ids=False)
+
+# You can use a different corpus for retrieval, e.g., titles instead of full docs
+titles = ["About Cat", "About Dog", "About Bird", "About Fish"]
+
+# You can also choose to only return the documents and omit the scores
+# note: if you pass a new corpus here, it must have the same length as your indexed corpus
+results = retriever.retrieve(query_token_ids, corpus=titles, k=2, return_as="documents")
+
+# The documents are returned as a numpy array of shape (n_queries, k)
+for i in range(results.shape[1]):
+    print(f"Rank {i+1}: {results[0, i]}")
+```
