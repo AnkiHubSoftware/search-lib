@@ -4,7 +4,7 @@ import boto3, os
 import json
 from pathlib import Path
 
-__all__ = ["get_notes", "download_sqlite_file"]
+__all__ = ["get_notes", "download_sqlite_file", "get_s3_client"]
 
 def get_s3_client():  
     client = boto3.client(
