@@ -1,4 +1,34 @@
-QUERY_DECOMPOSITION_PROMPT = """
+QUERY_DECOMPOSITION_PROMPT = """\
+You are a tool that takes in complex information and breaks it down into it's components by topic.  This is useful for medical students who are studying for their exams to get a list of topics to study.  These topic lists should be 3 - 8 words long, enough to understand the particular thing they should study.  For example "Heart" is too broad because there are many things to study about the heart.
+
+<document>
+{qry}
+</document>
+
+Break down the document into specific medical topics that would be relevant for exam study. Each topic should be:
+- 3-8 words long
+- Specific enough to be a distinct study topic
+- Focused on medical knowledge that could appear on an exam
+- Ignore non-medical content like copyright info or course details
+
+Output a JSON list of topics:
+[
+  "Topic 1",
+  "Topic 2",
+  ...
+]
+
+Example:
+Input: "The heart has four chambers: right atrium, right ventricle, left atrium, and left ventricle. Blood flows through these chambers in a specific pattern. The right atrium receives deoxygenated blood from the body via the superior and inferior vena cava. This blood then flows through the tricuspid valve into the right ventricle, which pumps it to the lungs through the pulmonary artery."
+Output: [
+  "Heart chamber anatomy",
+  "Blood flow through heart",
+  "Right heart circulation",
+  "Tricuspid valve function",
+  "Pulmonary circulation pathway"
+]"""
+
+QUERY_DECOMPOSITION_PROMPT = """\
 You are tasked with decomposing a given document into a set of specific, granular queries that thoroughly cover its contents. This process helps in breaking down complex information into manageable, searchable pieces.
 
 Here is the document you will be working with:
@@ -53,5 +83,48 @@ Queries:
 - What is the city covered in this document?
 - What is the topic of this document?
 
-Now, please carefully read the document and create your list of queries. Output your final list of queries in the specified JSON format.
+Now, please carefully read the document and create your list of queries. Output your final list of queries in the specified JSON format.\
 """
+
+PDF_PROCESSING_PROMPT = """\
+You are an advanced AI system specialized in converting PDF documents to markdown format, with a focus on extracting and formatting relevant medical information for study purposes. Your task is to process the following PDF document and convert it to a well-structured markdown format.
+
+Please follow these instructions carefully:
+
+1. Convert the PDF to text, preserving the document's structure and content.
+
+2. Format the document in markdown, adhering to these guidelines:
+   - Use appropriate headers:
+     # for main titles
+     ## for subtitles
+     ### for sub-subtitles (and so on)
+   - Preserve the document structure with proper sections.
+   - Format tables, lists, and other elements appropriately for markdown.
+
+3. Content filtering:
+   - Remove any irrelevant information such as:
+     * Copyright notices
+     * Email addresses
+     * Phone numbers
+     * Room numbers
+     * Any content not related to medical knowledge or unlikely to appear on a medical school exam
+   - Preserve all relevant medical information verbatim to ensure searchability.
+
+Remember, the goal is to create a clean, well-structured markdown document that retains all relevant medical information for study purposes while removing extraneous details.\
+"""
+
+
+KEYWORD_EXPANSION_PROMPT = """\
+You are a medical search assistant that expands search terms to help medical students find relevant flashcards. Your task is to expand the given query into a comprehensive list of related medical terms.
+
+Guidelines:
+- Only include terms you are confident are relevant for medical study
+- Focus on terms that would appear in medical flashcards
+- Include both the abbreviation and its full form if it is an abbreviation
+- Include common variations of medical terminology
+- Return ONLY the expanded query as a space-separated string of terms.
+- Precision is more important than recall so be a little bit picky about terms to include.
+- Remember, return ONLY the expanded query as a space-separated string of terms with no formatting
+
+Original query: {qry}
+Expanded query:"""
