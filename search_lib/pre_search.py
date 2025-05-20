@@ -15,6 +15,7 @@ import google.generativeai as genai
 def decompose_query(qry:tuple, model="gpt-3.5-turbo", verbose:bool=False)->list:
     class DecomposedDocument(BaseModel):
         queries: List[str]
+        expanded_terms: List[str]
             
     client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
     client = instructor.patch(client)

@@ -1,35 +1,5 @@
 QUERY_DECOMPOSITION_PROMPT = """\
-You are a tool that takes in complex information and breaks it down into it's components by topic.  This is useful for medical students who are studying for their exams to get a list of topics to study.  These topic lists should be 3 - 8 words long, enough to understand the particular thing they should study.  For example "Heart" is too broad because there are many things to study about the heart.
-
-<document>
-{qry}
-</document>
-
-Break down the document into specific medical topics that would be relevant for exam study. Each topic should be:
-- 3-8 words long
-- Specific enough to be a distinct study topic
-- Focused on medical knowledge that could appear on an exam
-- Ignore non-medical content like copyright info or course details
-
-Output a JSON list of topics:
-[
-  "Topic 1",
-  "Topic 2",
-  ...
-]
-
-Example:
-Input: "The heart has four chambers: right atrium, right ventricle, left atrium, and left ventricle. Blood flows through these chambers in a specific pattern. The right atrium receives deoxygenated blood from the body via the superior and inferior vena cava. This blood then flows through the tricuspid valve into the right ventricle, which pumps it to the lungs through the pulmonary artery."
-Output: [
-  "Heart chamber anatomy",
-  "Blood flow through heart",
-  "Right heart circulation",
-  "Tricuspid valve function",
-  "Pulmonary circulation pathway"
-]"""
-
-QUERY_DECOMPOSITION_PROMPT = """\
-You are tasked with decomposing a given document into a set of specific, granular queries that thoroughly cover its contents. This process helps in breaking down complex information into manageable, searchable pieces.
+You are tasked with decomposing a given document into a set of specific, granular queries that thoroughly cover its contents, while also expanding each query with relevant medical terminology. This process helps in breaking down complex information into manageable, searchable pieces.
 
 Here is the document you will be working with:
 
@@ -42,19 +12,30 @@ When creating queries, follow these criteria:
 2. Phrase each query as a question.
 3. Keep queries concise, typically 1-2 sentences long.
 4. Ensure that the set of queries collectively covers all important information in the document.
+5. For each query, include a list of related medical terms, abbreviations, and variations that would help in finding relevant information.
 
 To approach this task:
 1. Read through the entire document carefully.
 2. Identify key topics, concepts, and pieces of information.
 3. For each identified element, formulate a specific question that would lead to that information.
-4. Ensure you're not missing any significant details from the document.
-5. Review your queries to make sure they meet all the criteria mentioned above.
+4. Expand each query with relevant medical terminology, including:
+   - Abbreviations and their full forms
+   - Common variations of medical terms
+   - Related medical concepts
+   - Alternative phrasings used in medical literature
+5. Ensure you're not missing any significant details from the document.
+6. Review your queries to make sure they meet all the criteria mentioned above.
 
-Your output should be a JSON list of queries, formatted as follows:
+Your output should be a JSON list of objects, each containing a query and its expanded terms, formatted as follows:
 [
-  "Query 1?",
-  "Query 2?",
-  ...
+  {{
+    "query": "Query 1?",
+    "expanded_terms": ["term1", "term2", "abbreviation", "full form", "related term"]
+  }},
+  {{
+    "query": "Query 2?",
+    "expanded_terms": ["term1", "term2", "abbreviation", "full form", "related term"]
+  }}
 ]
 
 Remember:
@@ -70,20 +51,24 @@ Filter Information:
 - If a chunk only contains course information, links or copywrite, you should return no queries because there is no relevant information.
 
 Good Example:  
-Query: Paris, the capital of France is known for its Eiffel Tower.
-Queries: 
-- What is the capital of France?
-- What is Paris Known for?
-- Where is the Eiffel Tower?
-- What is the Eiffel Tower?
+Input: "The heart has four chambers: right atrium, right ventricle, left atrium, and left ventricle. Blood flows through these chambers in a specific pattern. The right atrium receives deoxygenated blood from the body via the superior and inferior vena cava. This blood then flows through the tricuspid valve into the right ventricle, which pumps it to the lungs through the pulmonary artery."
 
-Bad Example:
-Query: Paris, the capital of France is known for its Eiffel Tower.
-Queries: 
-- What is the city covered in this document?
-- What is the topic of this document?
+Output: [
+  {{
+    "query": "What are the four chambers of the heart?",
+    "expanded_terms": ["cardiac chambers", "atria", "ventricles", "RA", "RV", "LA", "LV", "right atrium", "right ventricle", "left atrium", "left ventricle"]
+  }},
+  {{
+    "query": "What is the function of the tricuspid valve?",
+    "expanded_terms": ["tricuspid valve", "atrioventricular valve", "AV valve", "right AV valve", "valvular function", "cardiac valves"]
+  }},
+  {{
+    "query": "What is the pathway of blood through the right side of the heart?",
+    "expanded_terms": ["right heart circulation", "venous return", "SVC", "IVC", "superior vena cava", "inferior vena cava", "pulmonary artery", "PA", "deoxygenated blood", "venous blood"]
+  }}
+]
 
-Now, please carefully read the document and create your list of queries. Output your final list of queries in the specified JSON format.\
+Now, please carefully read the document and create your list of queries with expanded terms. Output your final list in the specified JSON format.\
 """
 
 PDF_PROCESSING_PROMPT = """\
