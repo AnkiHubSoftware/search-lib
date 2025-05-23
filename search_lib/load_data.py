@@ -35,16 +35,15 @@ def download_sqlite_file(deck_name:str="AnKing Step Deck", replace:bool=False)->
     with open(local_path, "wb") as f:
         f.write(file_buffer.getvalue())
     return local_path
-
 def get_notes(db_path:Path)->list:
     """Get the notes from the SQLite file"""
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-    cursor.execute("SELECT id, fields, corpus, tags_cache FROM notes")
+    cursor.execute("SELECT id as ankihub_id, anki_id, fields, corpus, tags_cache FROM notes")
     
     notes = []
     for row in cursor.fetchall():
-        note_id, fields_json, corpus, tags_json = row
+        ankihub_id, anki_id, fields_json, corpus, tags_json = row
         try:
             fields = json.loads(fields_json)
             content = " ".join([f.get("value", "") for f in fields if isinstance(f, dict)])
@@ -56,7 +55,12 @@ def get_notes(db_path:Path)->list:
         try: tags = json.loads(tags_json) if tags_json else []
         except: tags = []
             
-        notes.append({"id": note_id, "content": content, "tags": tags})
+        notes.append({
+            "ankihub_id": ankihub_id,
+            "anki_id": anki_id,
+            "content": content,
+            "tags": tags
+        })
     
     conn.close()
     print(f"Extracted {len(notes)} notes with content")
