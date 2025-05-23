@@ -1,4 +1,4 @@
-__all__ = ["average_precision_evaluator", "r_precision_evaluator", "nrbp_evaluator"]
+__all__ = ["average_precision_evaluator", "r_precision_evaluator", "nrbp_evaluator", "recall_evaluator"]
 
 def average_precision_evaluator(expected, output, k=200):
     """
@@ -6,7 +6,7 @@ def average_precision_evaluator(expected, output, k=200):
     Average precision is the average of precision values at positions where relevant documents are found.
     """
     gold_standard_docs = {
-        document["ankihub_id"]  
+        str(document["anki_id"])  
         for document in expected["documents"]
         if document["rating"] == 1.0
     }
@@ -15,7 +15,7 @@ def average_precision_evaluator(expected, output, k=200):
     if total_relevant == 0:
         return 0.0
     
-    retrieved_ids = [doc["anki_id"] for doc in output["documents"][:k]]
+    retrieved_ids = [str(doc["anki_id"]) for doc in output["documents"][:k]]
     
     num_relevant = 0
     precision_scores = []
@@ -35,7 +35,7 @@ def r_precision_evaluator(expected, output):
     R-precision is the precision at R, where R is the number of relevant documents.
     """
     gold_standard_docs = {
-        document["ankihub_id"]  # Use ankihub_id from reference docs
+        str(document["anki_id"])  # Use ankihub_id from reference docs
         for document in expected["documents"]
         if document["rating"] == 1.0
     }
@@ -45,7 +45,7 @@ def r_precision_evaluator(expected, output):
         return 0.0
     
     # Get the top R retrieved documents
-    retrieved_ids = [doc["anki_id"] for doc in output["documents"][:num_gold_docs]]
+    retrieved_ids = [str(doc["anki_id"]) for doc in output["documents"][:num_gold_docs]]
     
     # Count relevant documents in the top R
     relevant_count = sum(1 for doc_id in retrieved_ids if str(doc_id) in gold_standard_docs)
@@ -57,12 +57,12 @@ def r_precision_evaluator(expected, output):
 
 def nrbp_evaluator(expected, output, p=0.8):
     gold_standard_docs = {
-        document["ankihub_id"]  # Use ankihub_id from reference docs
+        str(document["anki_id"])  # Use ankihub_id from reference docs
         for document in expected["documents"]
         if document["rating"] == 1.0
     }
-    retrieved_ids = [doc["anki_id"] for doc in output["documents"]]
-    
+
+    retrieved_ids = [str(doc["anki_id"]) for doc in output["documents"]]
     rbp_score, discount, relevant_count = 0.0, 1.0, 0    
     normalizer = (1 - p) / (1 - p**len(gold_standard_docs)) if p < 1 else 1/len(gold_standard_docs)
     
@@ -75,3 +75,20 @@ def nrbp_evaluator(expected, output, p=0.8):
     nrbp_score = rbp_score * normalizer
     
     return nrbp_score
+
+def recall_evaluator(expected, output, k=200):
+    """Calculate recall at k for the given expected and output documents."""
+    gold_standard_docs = {
+        str(document["anki_id"])
+        for document in expected["documents"]
+        if document["rating"] == 1.0
+    }
+    
+    total_relevant = len(gold_standard_docs)
+    if total_relevant == 0:
+        return 0.0
+    
+    retrieved_ids = [str(doc["anki_id"]) for doc in output["documents"][:k]]
+    relevant_retrieved = sum(1 for doc_id in retrieved_ids if doc_id in gold_standard_docs)
+    
+    return relevant_retrieved / total_relevant
