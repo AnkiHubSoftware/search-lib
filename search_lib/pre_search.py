@@ -15,7 +15,6 @@ import google.generativeai as genai
 def decompose_query(qry:tuple, model="gpt-3.5-turbo", verbose:bool=False)->list:
     class DecomposedDocument(BaseModel):
         queries: List[str]
-        expanded_terms: List[str]
             
     client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
     client = instructor.patch(client)
@@ -32,15 +31,19 @@ def decompose_query(qry:tuple, model="gpt-3.5-turbo", verbose:bool=False)->list:
 def keyword_expansion(qry: str, model="gpt-3.5-turbo") -> str:
     """Expand a medical query with related terms and synonyms"""
     client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
-    
+    client = instructor.patch(client)
+    class ExpandedQuery(BaseModel):
+        "An expanded query with related terms and synonyms"
+        expanded_query: str
+
+    prompt = KEYWORD_EXPANSION_PROMPT.format(qry=qry.strip())
     response = client.chat.completions.create(
         model=model,
-        messages=[{"role": "user", "content": KEYWORD_EXPANSION_PROMPT.format(qry=qry)}],
-        temperature=0.3,
-        max_tokens=100
+        response_model=ExpandedQuery,
+        messages=[{"role": "user", "content": prompt}]
     )
 
-    expanded_query = response.choices[0].message.content.strip()
+    expanded_query = response.expanded_query
 
     # If we just got back the original query or something very similar, try again with more explicit instructions
     if expanded_query.lower() == qry.lower() or len(expanded_query.split()) <= len(qry.split()):
