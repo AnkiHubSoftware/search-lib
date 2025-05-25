@@ -1,0 +1,29 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "search-lib"
+version = "0.1.0"
+description = "A library for AnkiHub search functionality"
+authors = [
+    {name = "AnkiHub", email = "support@ankihub.net"}
+]
+requires-python = ">=3.12"
+packages = ["search_lib"]
+# Production dependencies
+# TO-DO Separate out sub dependencies that shouldn't be installed in the production ankihub env.
+dependencies = [
+    "boto3",
+    "python-dotenv",
+    "pydantic>=2.0",
+    "numpy",
+    "tqdm",
+    "cohere",
+    "bm25s",
+    "weaviate-client",
+    "openai",
+    "google-generativeai",
+    "instructor",
+    "requests",
+]
